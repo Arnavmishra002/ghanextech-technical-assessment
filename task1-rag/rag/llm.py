@@ -33,7 +33,9 @@ def make_client(api_key: str | None = None) -> OpenAI:
     if not key:
         raise LLMError("No API key set. Add GROQ_API_KEY to your .env file or app secrets.")
     base_url = os.getenv("LLM_BASE_URL", DEFAULT_BASE_URL)
-    return OpenAI(api_key=key, base_url=base_url, timeout=60, max_retries=1)
+    # On a 429 the SDK waits for Groq's retry-after header before retrying, so a short
+    # burst over the free 8,000 tokens per minute limit slows down instead of failing.
+    return OpenAI(api_key=key, base_url=base_url, timeout=60, max_retries=3)
 
 
 def model_name() -> str:
