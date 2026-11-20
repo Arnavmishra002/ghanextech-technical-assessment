@@ -1,3 +1,4 @@
+import json
 import sys
 from pathlib import Path
 
@@ -8,9 +9,10 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 
 class FakeResponse:
-    def __init__(self, status_code=200, payload=None):
+    def __init__(self, status_code=200, payload=None, text=None):
         self.status_code = status_code
         self._payload = payload
+        self.text = text if text is not None else (json.dumps(payload) if payload is not None else "")
 
     def json(self):
         if self._payload is None:

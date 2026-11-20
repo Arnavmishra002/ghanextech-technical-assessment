@@ -23,22 +23,29 @@ HEADERS = {"User-Agent": "GhanexAssessmentAgent/1.0 (educational demo)"}
 class ToolError(Exception):
     """A tool failure with a message that is fine to show to the user."""
 
-    def __init__(self, message: str, status: int | None = None):
+    def __init__(self, message: str, status: int | None = None, retryable: bool = False):
         super().__init__(message)
         self.status = status
+        # True for timeouts, network errors, rate limits and server errors:
+        # the request itself was fine, so another service may still answer.
+        self.retryable = retryable
 
 
-def http_get_json(url: str, params: dict) -> dict:
+def http_get_json(url: str, params: dict, timeout: float = TIMEOUT_SECONDS) -> dict:
     try:
-        response = requests.get(url, params=params, headers=HEADERS, timeout=TIMEOUT_SECONDS)
+        response = requests.get(url, params=params, headers=HEADERS, timeout=timeout)
     except requests.Timeout as exc:
-        raise ToolError("The service took too long to answer. Please try again.") from exc
+        raise ToolError("The service took too long to answer. Please try again.", retryable=True) from exc
     except requests.RequestException as exc:
-        raise ToolError("Network problem while contacting the service.") from exc
+        raise ToolError("Network problem while contacting the service.", retryable=True) from exc
     if response.status_code == 429:
-        raise ToolError("The service is getting too many requests. Please wait a moment.", 429)
+        raise ToolError("The service is getting too many requests. Please wait a moment.", 429, retryable=True)
     if response.status_code >= 400:
-        raise ToolError(f"The service returned an error (HTTP {response.status_code}).", response.status_code)
+        raise ToolError(
+            f"The service returned an error (HTTP {response.status_code}).",
+            response.status_code,
+            retryable=response.status_code >= 500,
+        )
     try:
         return response.json()
     except ValueError as exc:
@@ -139,14 +146,68 @@ WEATHER_CODES = {
 }
 
 
+OPEN_METEO_TIMEOUT = 6  # short, so the fallback still answers quickly
+
+
 def get_weather(location: str) -> dict:
-    """Current weather and today's forecast from Open-Meteo (free, no key)."""
+    """Current weather and today's forecast. Open-Meteo first, wttr.in as a fallback.
+
+    On Streamlit Cloud many apps share a few IP addresses, and Open-Meteo
+    (fair-use limit per IP) timed out there while working fine locally. So if
+    Open-Meteo is slow, busy or down, a second free service is tried. A place
+    that does not exist is not retried.
+    """
     location = location.strip()
     if not location:
         raise ToolError("Please give a place name.")
+    try:
+        return _weather_open_meteo(location)
+    except ToolError as exc:
+        if not exc.retryable:
+            raise
+        return _weather_wttr(location)
+
+
+def _weather_wttr(location: str) -> dict:
+    try:
+        r = requests.get(
+            "https://wttr.in/" + quote(location, safe=""),
+            params={"format": "j1"},
+            headers=HEADERS,
+            timeout=TIMEOUT_SECONDS,
+        )
+    except requests.RequestException as exc:
+        raise ToolError("The weather services are not answering right now. Please try again later.") from exc
+    if "not found" in r.text[:200].lower():
+        raise ToolError(f"Could not find a place called '{location}'. Try a nearby city name.")
+    if r.status_code >= 400:
+        raise ToolError(f"The weather service returned an error (HTTP {r.status_code}).", r.status_code)
+    try:
+        data = r.json()
+        current, area, today = data["current_condition"][0], data["nearest_area"][0], data["weather"][0]
+        names = [area[k][0]["value"] for k in ("areaName", "region", "country") if area.get(k)]
+        return {
+            "place": ", ".join(n for n in names if n),
+            "observed": current.get("localObsDateTime") or f"{current.get('observation_time', '')} UTC",
+            "condition": current["weatherDesc"][0]["value"].strip().lower(),
+            "temperature_c": float(current["temp_C"]),
+            "feels_like_c": float(current["FeelsLikeC"]),
+            "humidity_percent": float(current["humidity"]),
+            "wind_kmh": float(current["windspeedKmph"]),
+            "today_max_c": float(today["maxtempC"]),
+            "today_min_c": float(today["mintempC"]),
+            "rain_chance_percent": max(int(h["chanceofrain"]) for h in today["hourly"]),
+            "source": "wttr.in (Open-Meteo did not answer)",
+        }
+    except (ValueError, KeyError, IndexError, TypeError) as exc:
+        raise ToolError("The weather service sent back an unexpected response.") from exc
+
+
+def _weather_open_meteo(location: str) -> dict:
     geo = http_get_json(
         "https://geocoding-api.open-meteo.com/v1/search",
         {"name": location, "count": 1, "language": "en", "format": "json"},
+        timeout=OPEN_METEO_TIMEOUT,
     )
     if not geo.get("results"):
         raise ToolError(f"Could not find a place called '{location}'. Try a nearby city name.")
@@ -161,6 +222,7 @@ def get_weather(location: str) -> dict:
             "forecast_days": 1,
             "timezone": "auto",
         },
+        timeout=OPEN_METEO_TIMEOUT,
     )
     current, daily = data["current"], data["daily"]
     return {

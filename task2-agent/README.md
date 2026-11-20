@@ -40,7 +40,7 @@ Error handling happens in layers:
 | Tool | Parameters | Source |
 |---|---|---|
 | `calculator` | `expression` (string) | Local. Parses the expression with Python's `ast` module and only allows numbers, `+ - * / // % **`, brackets, a few math functions (`sqrt`, `log`, `sin`, ...) and `pi`, `e`. No `eval`, so input like `__import__('os')` is rejected. Exponents above 1000 are refused so `9**9**9` cannot freeze the app. |
-| `get_weather` | `location` (string) | Open-Meteo geocoding, then the Open-Meteo forecast API. Returns current temperature, feels-like, humidity, wind, condition, today's high and low and rain chance. Free, no key. |
+| `get_weather` | `location` (string) | Open-Meteo geocoding, then the Open-Meteo forecast API. Returns current temperature, feels-like, humidity, wind, condition, today's high and low and rain chance. Free, no key. If Open-Meteo times out or is busy, it falls back to wttr.in (also free, no key). I added this after the deployed app timed out on Open-Meteo twice while it answered in 2.6 seconds from my laptop; Streamlit Cloud apps share IP addresses, and Open-Meteo has a fair-use limit per IP. |
 | `search_wikipedia` | `query` (string) | MediaWiki search API for the best match, then the REST summary endpoint. Returns title, summary, link and other matches. Free, no key. |
 | `convert_currency` | `amount` (number), `from_currency` (string), `to_currency` (string) | Frankfurter API (European Central Bank reference rates, updated once per working day). Free, no key. Covers about 30 major currencies including USD, EUR, GBP, INR. |
 

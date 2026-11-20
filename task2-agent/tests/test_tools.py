@@ -85,14 +85,39 @@ def test_weather_unknown_place(fake_http):
     assert "Could not find a place" in run_tool("get_weather", '{"location": "Xyzzyville"}')["error"]
 
 
-def test_weather_timeout(fake_http):
-    fake_http({"geocoding-api": requests.Timeout()})
-    assert "too long" in run_tool("get_weather", '{"location": "Pune"}')["error"]
+WTTR_PUNE = {
+    "current_condition": [
+        {"temp_C": "23", "FeelsLikeC": "21", "humidity": "32", "windspeedKmph": "4",
+         "observation_time": "01:30 PM", "weatherDesc": [{"value": "Clear "}]}
+    ],
+    "nearest_area": [{"areaName": [{"value": "Pune"}], "region": [{"value": "Maharashtra"}], "country": [{"value": "India"}]}],
+    "weather": [{"maxtempC": "28", "mintempC": "15", "hourly": [{"chanceofrain": "0"}, {"chanceofrain": "3"}]}],
+}
 
 
-def test_weather_server_error(fake_http):
-    fake_http({"geocoding-api": FakeResponse(200, GEO_PUNE), "api.open-meteo.com": FakeResponse(503, {})})
-    assert "HTTP 503" in run_tool("get_weather", '{"location": "Pune"}')["error"]
+def test_weather_falls_back_to_wttr_when_open_meteo_times_out(fake_http):
+    calls = fake_http({"geocoding-api": requests.Timeout(), "wttr.in": FakeResponse(200, WTTR_PUNE)})
+    out = run_tool("get_weather", '{"location": "Pune"}')
+    assert out["place"] == "Pune, Maharashtra, India"
+    assert out["temperature_c"] == 23.0 and out["condition"] == "clear" and out["rain_chance_percent"] == 3
+    assert out["source"].startswith("wttr.in")
+    assert calls[-1][0] == "https://wttr.in/Pune"
+
+
+def test_weather_falls_back_on_server_error(fake_http):
+    fake_http({"geocoding-api": FakeResponse(200, GEO_PUNE), "api.open-meteo.com": FakeResponse(503, {}),
+               "wttr.in": FakeResponse(200, WTTR_PUNE)})
+    assert run_tool("get_weather", '{"location": "Pune"}')["source"].startswith("wttr.in")
+
+
+def test_weather_both_services_down(fake_http):
+    fake_http({"geocoding-api": requests.Timeout(), "wttr.in": requests.ConnectionError()})
+    assert "not answering" in run_tool("get_weather", '{"location": "Pune"}')["error"]
+
+
+def test_weather_unknown_place_on_fallback(fake_http):
+    fake_http({"geocoding-api": requests.Timeout(), "wttr.in": FakeResponse(500, None, text="location not found")})
+    assert "Could not find a place" in run_tool("get_weather", '{"location": "Xyzzyville"}')["error"]
 
 
 # ------------------------------------------------------------- wikipedia
