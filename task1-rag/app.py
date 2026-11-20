@@ -45,7 +45,8 @@ st.caption(
 
 with st.sidebar:
     st.header("Documents")
-    uploads = st.file_uploader("PDF files", type=["pdf"], accept_multiple_files=True)
+    # 25 MB per file keeps memory use safe on the free hosting tier.
+    uploads = st.file_uploader("PDF files", type=["pdf"], accept_multiple_files=True, max_upload_size=25)
     st.divider()
     user_key = st.text_input(
         "Your Groq API key (optional)",
