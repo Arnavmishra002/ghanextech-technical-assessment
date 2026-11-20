@@ -2,7 +2,7 @@
 
 Paste any public GitHub repository and get a dashboard: key numbers, a language chart, health checks, and an AI review with a summary, architecture notes, strengths, at least three recommendations and ideas for new contributors. The review can be downloaded as Markdown.
 
-Live app: LIVE_URL_TASK3
+Live app: https://arnav-ghanex-analyzer.streamlit.app
 
 ## How it works
 

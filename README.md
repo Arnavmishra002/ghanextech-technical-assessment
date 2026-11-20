@@ -4,11 +4,11 @@ My solutions to the three tasks in the Ghanex Tech GenAI & Open-Source Developer
 
 | Task | Folder | Live app |
 |---|---|---|
-| 1. Document assistant (RAG) | [task1-rag](task1-rag) | LIVE_URL_TASK1 |
-| 2. AI agent with tool calling | [task2-agent](task2-agent) | LIVE_URL_TASK2 |
-| 3. GitHub repository analyzer | [task3-github-analyzer](task3-github-analyzer) | LIVE_URL_TASK3 |
+| 1. Document assistant (RAG) | [task1-rag](task1-rag) | https://arnav-ghanex-rag.streamlit.app |
+| 2. AI agent with tool calling | [task2-agent](task2-agent) | https://arnav-ghanex-agent.streamlit.app |
+| 3. GitHub repository analyzer | [task3-github-analyzer](task3-github-analyzer) | https://arnav-ghanex-analyzer.streamlit.app |
 
-Open-source contribution: CONTRIBUTION_URL
+Open-source contribution: https://github.com/martin-majlis/Wikipedia-API/pull/723 (restores the `wikipediaapi.log` package logger that the README logging example relies on, with tests)
 
 Each folder is a separate Streamlit app with its own README (architecture, design choices, setup, tests, limits), `requirements.txt` and `.env.example`.
 

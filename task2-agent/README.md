@@ -2,7 +2,7 @@
 
 A chat assistant that decides by itself when to use a tool. It can do exact maths, get live weather, look things up on Wikipedia and convert currencies. For greetings and general questions it just answers.
 
-Live app: LIVE_URL_TASK2
+Live app: https://arnav-ghanex-agent.streamlit.app
 
 ## Architecture
 

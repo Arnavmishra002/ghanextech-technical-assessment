@@ -2,7 +2,7 @@
 
 Upload one or more PDFs, ask questions in plain English, and get answers that come only from the documents, with the file name and page number for every source.
 
-Live app: LIVE_URL_TASK1
+Live app: https://arnav-ghanex-rag.streamlit.app
 
 To try it quickly, upload [sample_docs/solar_kit_guide.pdf](sample_docs/solar_kit_guide.pdf) (a made-up 4-page product guide) and ask:
 - "How long is the panel warranty?" (page 2)
