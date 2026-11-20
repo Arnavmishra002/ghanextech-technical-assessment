@@ -1,0 +1,3 @@
+[server]
+# Keep uploads small enough for the free hosting tier (value is in MB).
+maxUploadSize = 25
