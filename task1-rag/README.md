@@ -4,6 +4,12 @@ Upload one or more PDFs, ask questions in plain English, and get answers that co
 
 Live app: LIVE_URL_TASK1
 
+To try it quickly, upload [sample_docs/solar_kit_guide.pdf](sample_docs/solar_kit_guide.pdf) (a made-up 4-page product guide) and ask:
+- "How long is the panel warranty?" (page 2)
+- "What should I do if the inverter light is red?" (page 3)
+- "Is hail damage covered?" (page 2)
+- "What is the capital of France?" (not in the document, so the app says it could not find it)
+
 ## How it works
 
 ```
