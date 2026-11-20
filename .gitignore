@@ -1,0 +1,16 @@
+# Secrets
+.env
+.streamlit/secrets.toml
+**/.streamlit/secrets.toml
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Local model cache (fastembed downloads)
+.fastembed_cache/
+**/.fastembed_cache/
+
+.DS_Store
