@@ -17,6 +17,41 @@ _TEST_DIRS = {"test", "tests", "__tests__", "spec", "testing"}
 _CI_PREFIXES = (".github/workflows/", ".circleci/", ".gitlab-ci.yml", ".travis.yml", "azure-pipelines.yml", "Jenkinsfile")
 
 
+# Config files that show which tooling a project already uses. Passing this
+# list to the LLM stops it from recommending things the repo already has.
+TOOLING_FILES = {
+    ".pre-commit-config.yaml": "pre-commit hooks",
+    "ruff.toml": "ruff",
+    ".ruff.toml": "ruff",
+    ".flake8": "flake8",
+    "tox.ini": "tox",
+    "noxfile.py": "nox",
+    "mypy.ini": "mypy",
+    ".eslintrc.json": "eslint",
+    "eslint.config.js": "eslint",
+    ".prettierrc": "prettier",
+    ".editorconfig": "editorconfig",
+    "Makefile": "Makefile",
+    "Dockerfile": "Dockerfile",
+    "docker-compose.yml": "docker compose",
+    "compose.yaml": "docker compose",
+    "mkdocs.yml": "mkdocs docs site",
+    ".readthedocs.yaml": "Read the Docs",
+    "codecov.yml": "codecov",
+    ".github/dependabot.yml": "dependabot",
+    ".github/CODEOWNERS": "CODEOWNERS",
+    ".github/PULL_REQUEST_TEMPLATE.md": "pull request template",
+}
+
+
+def tooling_found(paths: list[str]) -> list[str]:
+    present = set(paths)
+    found = {label for path, label in TOOLING_FILES.items() if path in present}
+    if any(p.startswith(".github/ISSUE_TEMPLATE/") for p in paths):
+        found.add("issue templates")
+    return sorted(found)
+
+
 def _has_tests(paths: list[str]) -> bool:
     for p in paths:
         if _TEST_FILE.search(p):
@@ -85,6 +120,7 @@ def compute_metrics(snap: RepoSnapshot, now: datetime | None = None) -> dict:
         "has_dockerfile": any(p.split("/")[-1].lower().startswith("dockerfile") for p in snap.paths),
         "has_code_of_conduct": _has_file(snap.paths, "code_of_conduct"),
         "has_changelog": _has_file(snap.paths, "changelog", "changes", "history"),
+        "tooling_found": tooling_found(snap.paths),
         "checks": checks,
         "health_score": f"{sum(checks.values())}/{len(checks)}",
         "good_first_issue_count": len(snap.good_first_issues),

@@ -53,3 +53,10 @@ def test_contributing_found_in_github_or_docs_folder():
 def test_language_shares_sorted_and_rounded():
     assert language_shares({"C": 1, "Python": 2}) == {"Python": 66.7, "C": 33.3}
     assert language_shares({}) == {}
+
+
+def test_tooling_found_lists_existing_config_files():
+    paths = [".pre-commit-config.yaml", "tox.ini", ".github/dependabot.yml", ".github/ISSUE_TEMPLATE/bug.md", "src/Makefile"]
+    found = compute_metrics(bare_snapshot(paths), now=NOW)["tooling_found"]
+    # src/Makefile is not at the root, so it does not count
+    assert found == ["dependabot", "issue templates", "pre-commit hooks", "tox"]

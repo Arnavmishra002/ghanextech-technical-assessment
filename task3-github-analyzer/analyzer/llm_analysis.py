@@ -16,7 +16,7 @@ MAX_MANIFEST_IN_PROMPT = 1_200
 
 SYSTEM_PROMPT = """You are a senior software engineer reviewing a public GitHub repository for a developer who wants to understand it or contribute to it.
 
-Base every statement only on the data provided. If something cannot be known from the data, say so instead of guessing. The health checks were computed by code from the real file list, so trust them.
+Base every statement only on the data provided. If something cannot be known from the data, say so instead of guessing. The health checks and "tooling_found" were computed by code from the real file list, so trust them. Never recommend adding something the repository already has (a check marked true, an item in tooling_found, or a file visible in the tree).
 
 Reply with one JSON object and nothing else, using exactly these keys:
 {

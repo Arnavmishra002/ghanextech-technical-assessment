@@ -46,7 +46,7 @@ analyzer/report.py         Markdown export
 
 ## Design choices
 
-Facts from code, opinions from the LLM. Whether a repo has tests, CI or a license is checked by code from the real file list, then given to the model as facts. The model is told to trust them and to say when something cannot be known. This stops it from inventing things like "add CI" for a repo that already has GitHub Actions.
+Facts from code, opinions from the LLM. Whether a repo has tests, CI or a license is checked by code from the real file list, then given to the model as facts. The model is told to trust them and to say when something cannot be known. This stops it from inventing things like "add CI" for a repo that already has GitHub Actions. The same goes for common tooling files (pre-commit, tox, Dockerfile, dependabot, issue templates and others), which are listed as `tooling_found`. In a live test on pallets/flask, the first version of the prompt recommended adding pre-commit hooks although flask already has `.pre-commit-config.yaml`; after adding `tooling_found` that recommendation went away.
 
 One recursive tree call. `git/trees/{branch}?recursive=1` returns every file path in one request, instead of walking folders one call at a time. That matters because unauthenticated users only get 60 calls per hour. For microsoft/vscode (21,575 files) the whole fetch took 3.3 seconds in my test.
 
